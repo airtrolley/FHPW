@@ -1,0 +1,25 @@
+{
+  "name": "fhpw",
+  "version": "1.0.0",
+  "description": "FHPW — E2E test automation",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:workflow": "playwright test tests/e2e/workflow.spec.ts",
+    "test:signup": "playwright test tests/onboarding/signup.spec.ts",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:ci": "playwright test --reporter=github,html",
+    "report": "playwright show-report",
+    "install:browsers": "playwright install --with-deps chromium firefox",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^9.0.0",
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^22.0.0",
+    "dotenv": "^16.4.0",
+    "typescript": "^5.7.0"
+  }
+}

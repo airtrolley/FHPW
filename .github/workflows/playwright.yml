@@ -1,0 +1,86 @@
+name: FHPW E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 3 * * *'  # Nightly regression at 3am UTC
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Suite to run'
+        default: 'smoke'
+        type: choice
+        options: [smoke, booking, privacy, all]
+
+env:
+  CI: true
+  NODE_ENV: test
+
+jobs:
+  smoke:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - name: Create auth directory
+        run: mkdir -p playwright/.auth
+
+      - name: Run smoke tests
+        run: npx playwright test --grep @smoke --project=member-portal
+        env:
+          MEMBER_PORTAL_URL: ${{ secrets.MEMBER_PORTAL_URL }}
+          HUB_PORTAL_URL: ${{ secrets.HUB_PORTAL_URL }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          HUB_USERNAME: ${{ secrets.HUB_USERNAME }}
+          HUB_PASSWORD: ${{ secrets.HUB_PASSWORD }}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-report
+          path: playwright-report/
+          retention-days: 14
+
+  regression:
+    name: Full Regression
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npx playwright install --with-deps
+
+      - name: Create auth directory
+        run: mkdir -p playwright/.auth
+
+      - name: Run all tests
+        run: npx playwright test
+        env:
+          MEMBER_PORTAL_URL: ${{ secrets.MEMBER_PORTAL_URL }}
+          HUB_PORTAL_URL: ${{ secrets.HUB_PORTAL_URL }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          HUB_USERNAME: ${{ secrets.HUB_USERNAME }}
+          HUB_PASSWORD: ${{ secrets.HUB_PASSWORD }}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-report
+          path: playwright-report/
+          retention-days: 30
