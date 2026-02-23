@@ -38,7 +38,7 @@ export default defineConfig({
 
   projects: [
     {
-      name: 'chromium',
+      name: 'member-portal',
       use: {
         ...devices['Desktop Chrome'],
         baseURL: process.env.MEMBER_PORTAL_URL,
